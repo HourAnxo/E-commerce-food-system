@@ -1,16 +1,13 @@
 package com.example.E_commerce_food_system.Service;
 
 import com.example.E_commerce_food_system.DTO.ProductDTO;
-import com.example.E_commerce_food_system.Entity.Product;
-
 import java.util.List;
 
 public interface ProductService {
-    List<Product> getAll();
-    Product getById(Integer id);
-    Product create(ProductDTO dto);
-    Product update(Integer id, ProductDTO dto);
-    void delete(Integer id);
-
-
+    List<ProductDTO> getAllProducts();
+    ProductDTO getProductById(Integer id);
+    List<ProductDTO> getProductsByCategory(Integer categoryId);
+    ProductDTO createProduct(ProductDTO productDTO);
+    ProductDTO updateProduct(Integer id, ProductDTO productDTO);
+    void deleteProduct(Integer id);
 }
