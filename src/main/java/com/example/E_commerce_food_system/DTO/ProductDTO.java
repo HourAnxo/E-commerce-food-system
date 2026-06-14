@@ -1,5 +1,6 @@
 package com.example.E_commerce_food_system.DTO;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -11,6 +12,7 @@ public class ProductDTO {
     private String description;
     private BigDecimal price;
     private Integer stockQuantity;
+    @JsonProperty("image_url")
     private String imageUrl;
     private LocalDateTime createdAt;
 

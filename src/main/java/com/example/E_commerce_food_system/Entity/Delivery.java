@@ -33,7 +33,7 @@ public class Delivery {
     private LocalDateTime estimatedDelivery;
 
     public enum DeliveryStatus {
-        Preparing, On_the_way, Delivered
+        Preparing, Shipped, Delivered
     }
 
     // Getters and Setters

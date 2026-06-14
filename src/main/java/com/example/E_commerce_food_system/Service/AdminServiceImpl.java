@@ -81,15 +81,25 @@ public class AdminServiceImpl implements AdminService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Admin not found with id: " + id));
 
-        if (!admin.getEmail().equals(adminDTO.getEmail()) &&
+        // Only validate the email when a new, different one is supplied.
+        if (adminDTO.getEmail() != null && !adminDTO.getEmail().equals(admin.getEmail()) &&
                 adminRepository.existsByEmail(adminDTO.getEmail())) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT, "Email already exists: " + adminDTO.getEmail());
         }
 
-        admin.setFullName(adminDTO.getFullName());
-        admin.setEmail(adminDTO.getEmail());
-        admin.setPassword(adminDTO.getPassword());
+        // Partial update: only overwrite fields the client actually sent, so
+        // omitted fields keep their value instead of becoming null (these
+        // columns are NOT NULL, which previously caused a 500).
+        if (adminDTO.getFullName() != null) {
+            admin.setFullName(adminDTO.getFullName());
+        }
+        if (adminDTO.getEmail() != null) {
+            admin.setEmail(adminDTO.getEmail());
+        }
+        if (adminDTO.getPassword() != null) {
+            admin.setPassword(adminDTO.getPassword());
+        }
 
         return toDTO(adminRepository.save(admin));
     }

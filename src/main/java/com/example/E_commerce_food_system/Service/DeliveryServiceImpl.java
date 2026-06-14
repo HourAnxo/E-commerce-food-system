@@ -36,6 +36,13 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
+    public DeliveryDTO getDeliveryByOrderId(Integer orderId) {
+        Delivery delivery = deliveryRepository.findByOrder_OrderId(orderId)
+                .orElseThrow(() -> new RuntimeException("Delivery not found for order " + orderId));
+        return toDTO(delivery);
+    }
+
+    @Override
     public DeliveryDTO createDelivery(DeliveryDTO dto) {
         Orders order = orderRepository.findById(dto.getOrderId())
                 .orElseThrow(() -> new RuntimeException("Order not found"));

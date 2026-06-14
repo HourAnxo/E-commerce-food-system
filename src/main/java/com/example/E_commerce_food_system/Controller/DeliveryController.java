@@ -28,6 +28,11 @@ public class DeliveryController {
         return ResponseEntity.ok(deliveryService.getDeliveryById(id));
     }
 
+    @GetMapping("/order/{orderId}")
+    public ResponseEntity<DeliveryDTO> getDeliveryByOrderId(@PathVariable Integer orderId) {
+        return ResponseEntity.ok(deliveryService.getDeliveryByOrderId(orderId));
+    }
+
     @PostMapping
     public ResponseEntity<DeliveryDTO> createDelivery(@RequestBody DeliveryDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED)

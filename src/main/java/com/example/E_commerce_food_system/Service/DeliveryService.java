@@ -6,6 +6,7 @@ import java.util.List;
 public interface DeliveryService {
     List<DeliveryDTO> getAllDeliveries();
     DeliveryDTO getDeliveryById(Integer id);
+    DeliveryDTO getDeliveryByOrderId(Integer orderId);
     DeliveryDTO createDelivery(DeliveryDTO dto);
     DeliveryDTO updateDelivery(Integer id, DeliveryDTO dto);
     void deleteDelivery(Integer id);
