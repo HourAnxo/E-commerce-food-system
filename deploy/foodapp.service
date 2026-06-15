@@ -1,0 +1,20 @@
+    [Unit]
+Description=E-Commerce Food System backend (Spring Boot)
+After=network.target mysql.service
+
+[Service]
+User=www-data
+WorkingDirectory=/opt/foodapp
+# DB credentials are read from these env vars by application.properties
+# (DB_URL / DB_USERNAME / DB_PASSWORD). Nothing secret is baked into the JAR.
+Environment=DB_URL=jdbc:mysql://localhost:3306/e_commerce_system
+Environment=DB_USERNAME=foodapp
+Environment=DB_PASSWORD=CHANGE_ME_STRONG_PW
+ExecStart=/usr/bin/java -jar /opt/foodapp/app.jar
+# Spring Boot exits with 143 on SIGTERM; treat it as a clean stop.
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

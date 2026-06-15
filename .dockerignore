@@ -1,0 +1,8 @@
+target/
+food-frontend/
+.git/
+.idea/
+.claude/
+*.iml
+HELP.md
+deploy/
