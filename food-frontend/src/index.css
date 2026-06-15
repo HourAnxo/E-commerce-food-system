@@ -1,34 +1,45 @@
-:root {
-  /* Accent (orange) — used only for buttons, highlights, active states */
-  --accent: #ff6b00;
-  --accent-dark: #e85f00;
-  --accent-soft: #fff3e9;
 
-  /* Neutrals */
-  --black: #111111;
-  --gray-900: #1a1a1a;
-  --gray-700: #444444;
-  --gray-500: #767676;
-  --gray-400: #9a9a9a;
-  --gray-300: #d8d8d8;
-  --gray-200: #ececec;
-  --gray-100: #f4f4f5;
-  --white: #ffffff;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* Accent (neon orange) — buttons, highlights, active states, glow */
+  --accent: #ff7a1a;
+  --accent-dark: #ff8f3d;
+  --accent-soft: rgba(255, 122, 26, 0.14);
+  --accent-glow: rgba(255, 122, 26, 0.45);
+
+  /* Dark neutrals — remapped so existing component rules adopt the dark theme */
+  --black: #ffffff;          /* headings / strongest text */
+  --gray-900: #f2f4f8;       /* primary text */
+  --gray-700: #c5cad4;       /* body text */
+  --gray-500: #99a0ad;       /* muted text */
+  --gray-400: #6f7686;       /* faint text / icons / placeholders */
+  --gray-300: rgba(255, 255, 255, 0.16);  /* strong borders / dots */
+  --gray-200: rgba(255, 255, 255, 0.10);  /* subtle borders / disabled */
+  --gray-100: rgba(255, 255, 255, 0.05);  /* inset fields / hover wells */
+  --white: rgba(255, 255, 255, 0.035);     /* solid-ish glass surfaces */
 
   /* Surfaces */
-  --bg: #ffffff;
-  --surface: #ffffff;
-  --border: #ececec;
+  --bg: #0c0d12;
+  --surface: rgba(255, 255, 255, 0.045);   /* translucent glass cards */
+  --surface-strong: rgba(20, 22, 30, 0.72);
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  /* Glass blur */
+  --glass-blur: saturate(160%) blur(16px);
 
   /* Shape & depth */
-  --radius: 14px;
-  --radius-sm: 10px;
-  --shadow-sm: 0 1px 2px rgba(17, 17, 17, 0.04);
-  --shadow-md: 0 4px 16px rgba(17, 17, 17, 0.06);
-  --shadow-lg: 0 10px 30px rgba(17, 17, 17, 0.08);
+  --radius: 16px;
+  --radius-sm: 11px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 18px 50px rgba(0, 0, 0, 0.55);
+  --shadow-glow: 0 8px 28px var(--accent-glow);
 
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--gray-900);
+  color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -44,17 +55,24 @@ body {
 }
 
 body {
-  background: var(--bg);
   min-height: 100vh;
   line-height: 1.5;
+  color: var(--gray-900);
+  background-color: var(--bg);
+  /* Ambient glow field that the glass surfaces refract */
+  background-image:
+    radial-gradient(900px 600px at 12% -8%, rgba(255, 122, 26, 0.16), transparent 60%),
+    radial-gradient(800px 600px at 100% 0%, rgba(120, 80, 255, 0.12), transparent 55%),
+    radial-gradient(700px 700px at 50% 120%, rgba(255, 122, 26, 0.08), transparent 60%);
+  background-attachment: fixed;
 }
 
 h1,
 h2,
 h3 {
   margin: 0 0 0.5em;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
   color: var(--black);
 }
 
@@ -69,4 +87,30 @@ select,
 button {
   font-family: inherit;
   font-size: 1rem;
+  color: var(--gray-900);
+}
+
+::placeholder {
+  color: var(--gray-400);
+}
+
+::selection {
+  background: var(--accent-glow);
+  color: #fff;
+}
+
+/* Custom scrollbar to match the dark theme */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+  background-clip: content-box;
 }

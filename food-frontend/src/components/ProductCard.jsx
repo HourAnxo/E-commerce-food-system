@@ -15,9 +15,9 @@ export default function ProductCard({ product }) {
         <Link to={`/products/${product.productId}`} className="product-name">
           {product.productName}
         </Link>
-        {product.description && (
-          <p className="product-card-desc">{product.description}</p>
-        )}
+        {/* Always render the description slot (reserved height) so every card
+            stays the same height whether or not it has a description. */}
+        <p className="product-card-desc">{product.description || ' '}</p>
         <p className="product-price">${Number(product.price).toFixed(2)}</p>
         <div className="product-card-footer">
           <button
