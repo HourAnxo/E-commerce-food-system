@@ -5,7 +5,10 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+# npm install (not ci) so the Linux container can reconcile platform-specific
+# optional deps (Vite 8 / rolldown wasm bindings) that a Windows-generated
+# lockfile won't exactly satisfy.
+RUN npm install
 COPY . .
 # .env.production sets VITE_API_URL="" so the app makes relative /api calls
 # that Nginx (below) proxies to the backend.
