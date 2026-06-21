@@ -19,7 +19,7 @@ public class Payment {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", nullable = false,
-            columnDefinition = "ENUM('Cash','Credit Card','ABA','ACELEDA','Wing')")
+            columnDefinition = "ENUM('Cash','Credit Card','ABA','ACELEDA','Wing','Bakong')")
     private PaymentMethod paymentMethod;
 
     @Enumerated(EnumType.STRING)
@@ -37,7 +37,8 @@ public class Payment {
 
         ABA,
         ACELEDA,
-        Wing
+        Wing,
+        Bakong
     }
 
     public enum PaymentStatus {

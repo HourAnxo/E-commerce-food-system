@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
-import { orderApi } from '../api/services'
+import { orderApi, paymentApi } from '../api/services'
 
 export default function OrderHistory() {
   const { customer } = useAuth()
   const location = useLocation()
   const justOrdered = location.state?.justOrdered
   const [orders, setOrders] = useState([])
+  // Map of orderId -> payment record, so each order can show how it was paid.
+  const [payments, setPayments] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -17,7 +19,19 @@ export default function OrderHistory() {
     setLoading(true)
     orderApi
       .getByCustomer(customer.customerId)
-      .then((res) => setOrders(res.data))
+      .then(async (res) => {
+        setOrders(res.data)
+        // Pull each order's payment (if any) and key it by orderId.
+        const results = await Promise.all(
+          res.data.map((o) =>
+            paymentApi
+              .getByOrder(o.orderId)
+              .then((r) => [o.orderId, r.data[0]])
+              .catch(() => [o.orderId, null]),
+          ),
+        )
+        setPayments(Object.fromEntries(results.filter(([, p]) => p)))
+      })
       .catch(() => setError('Could not load your orders.'))
       .finally(() => setLoading(false))
   }, [customer])
@@ -73,6 +87,12 @@ export default function OrderHistory() {
               <span className={`status status-${order.orderStatus?.toLowerCase()}`}>
                 {order.orderStatus}
               </span>
+              {payments[order.orderId] && (
+                <span className="muted payment-tag">
+                  {payments[order.orderId].paymentMethod} ·{' '}
+                  {payments[order.orderId].paymentStatus}
+                </span>
+              )}
               <strong>${Number(order.totalAmount).toFixed(2)}</strong>
               <Link to={`/deliveries/${order.orderId}`} className="track-link">
                 Track

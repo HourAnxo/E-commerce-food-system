@@ -8,8 +8,15 @@ set -euo pipefail
 
 : "${SERVER:?Set SERVER, e.g. SERVER=user@1.2.3.4 ./deploy/deploy.sh}"
 
+# Pick the Maven wrapper for the OS running this script: the .cmd batch file on
+# Windows (Git Bash/MSYS), the POSIX shell script everywhere else.
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*) MVNW=./mvnw.cmd ;;
+  *)                    MVNW=./mvnw ;;
+esac
+
 echo "==> Building backend JAR"
-./mvnw.cmd clean package -DskipTests
+"$MVNW" clean package -DskipTests
 
 echo "==> Building frontend bundle"
 ( cd food-frontend && npm ci && npm run build )
@@ -22,8 +29,8 @@ scp "$JAR" "$SERVER:/tmp/app.jar"
 ssh "$SERVER" "sudo mv /tmp/app.jar /opt/foodapp/app.jar"
 
 echo "==> Uploading frontend to $SERVER:/var/www/foodapp"
-scp -r food-frontend/dist/* "$SERVER:/tmp/foodapp-dist/" 2>/dev/null || \
-  ( ssh "$SERVER" "mkdir -p /tmp/foodapp-dist" && scp -r food-frontend/dist/* "$SERVER:/tmp/foodapp-dist/" )
+ssh "$SERVER" "rm -rf /tmp/foodapp-dist && mkdir -p /tmp/foodapp-dist"
+scp -r food-frontend/dist/* "$SERVER:/tmp/foodapp-dist/"
 ssh "$SERVER" "sudo rm -rf /var/www/foodapp/* && sudo cp -r /tmp/foodapp-dist/* /var/www/foodapp/ && rm -rf /tmp/foodapp-dist"
 
 echo "==> Restarting backend service"

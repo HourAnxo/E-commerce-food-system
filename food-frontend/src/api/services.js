@@ -42,6 +42,21 @@ export const adminApi = {
   login: (email, password) => api.post('/api/admins/login', { email, password }),
 }
 
+// NOTE: the backend mapping is singular — @RequestMapping("api/payment").
+export const paymentApi = {
+  getByOrder: (orderId) => api.get(`/api/payment/order/${orderId}`),
+  create: (payment) => api.post('/api/payment', payment),
+}
+
+// Bakong KHQR: generate a QR for an order, then poll until it's paid.
+export const bakongApi = {
+  generateQr: (orderId) => api.post(`/api/payment/bakong/qr/${orderId}`),
+  checkStatus: (md5, orderId) =>
+    api.get('/api/payment/bakong/status', { params: { md5, orderId } }),
+}
+
 // Backend enum values — must match exactly or PUT requests fail.
 export const ORDER_STATUSES = ['Pending', 'Processing', 'Shipped', 'Delivery', 'Cancelled']
 export const DELIVERY_STATUSES = ['Preparing', 'Shipped', 'Delivered']
+// Payment.PaymentMethod enum — "Credit Card" maps via @JsonProperty on the backend.
+export const PAYMENT_METHODS = ['Cash', 'Credit Card', 'ABA', 'ACELEDA', 'Wing', 'Bakong']

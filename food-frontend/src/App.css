@@ -550,6 +550,59 @@ main.container {
   margin-bottom: 1rem;
 }
 
+.payment-methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.payment-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.payment-option:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.payment-option input {
+  accent-color: var(--accent);
+}
+
+.bakong-pay {
+  text-align: center;
+}
+
+.bakong-qr {
+  display: block;
+  margin: 0 auto 1rem;
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 0.75rem;
+}
+
+.bakong-amount {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.bakong-waiting {
+  margin-top: 1rem;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
 .success-banner {
   background: var(--accent-soft);
   border: 1px solid rgba(255, 122, 26, 0.4);
@@ -658,6 +711,14 @@ main.container {
 .status-preparing {
   background: rgba(255, 176, 32, 0.16);
   color: #ffce6a;
+}
+.status-paid {
+  background: rgba(40, 200, 120, 0.16);
+  color: #6ee7a8;
+}
+.status-failed {
+  background: rgba(255, 80, 70, 0.16);
+  color: #ff948c;
 }
 
 /* ============================================================

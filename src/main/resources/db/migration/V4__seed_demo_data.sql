@@ -30,4 +30,4 @@ INSERT INTO products (category_id, product_name, description, price, stock_quant
 
 -- Demo admin account (plaintext password, matching the app's auth model).
 INSERT INTO admin (full_name, email, password) VALUES
-    ('Demo Admin', 'admin@foodapp.com', 'admin123');
+    ('Minghour', 'admin@foodapp.com', 'admin    123');
