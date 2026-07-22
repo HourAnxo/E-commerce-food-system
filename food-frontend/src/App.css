@@ -135,10 +135,20 @@ main.container {
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 1.3rem;
   font-weight: 800;
   letter-spacing: -0.03em;
   color: var(--black);
+}
+
+.brand .brand-logo {
+  width: 1.6rem;
+  height: 1.6rem;
+  color: var(--accent);
+  filter: drop-shadow(0 0 10px var(--accent-glow));
 }
 
 .brand .brand-accent {

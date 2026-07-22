@@ -16,6 +16,20 @@ export default function Navbar() {
     <header className="navbar">
       <div className="navbar-inner container">
         <Link to="/" className="brand">
+          <svg className="brand-logo" viewBox="0 0 48 48" aria-hidden="true">
+            <g
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              fill="none"
+              opacity="0.9"
+            >
+              <path d="M19 20c-2.4-2.6-2.4-4.4 0-7 2.4-2.6 2.4-4.4 0-7" />
+              <path d="M29 20c-2.4-2.6-2.4-4.4 0-7 2.4-2.6 2.4-4.4 0-7" />
+            </g>
+            <path d="M11 25.5h26a13 13 0 0 1-26 0Z" fill="currentColor" />
+            <ellipse cx="24" cy="25.5" rx="13.6" ry="3.2" fill="currentColor" />
+          </svg>
           food<span className="brand-accent">.</span>
         </Link>
 

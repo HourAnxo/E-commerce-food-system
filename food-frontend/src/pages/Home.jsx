@@ -10,7 +10,7 @@ export default function Home() {
   useEffect(() => {
     productApi
       .getAll()
-      .then((res) => setFeatured(res.data.slice(0, 4)))
+      .then((res) => setFeatured(res.data.slice(0, 6)))
       .catch(() => setFeatured([]))
       .finally(() => setLoading(false))
   }, [])

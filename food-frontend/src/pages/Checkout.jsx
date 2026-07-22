@@ -35,8 +35,13 @@ export default function Checkout() {
           clearCart()
           navigate('/orders', { state: { justOrdered: true } })
         }
-      } catch {
-        // transient error — keep polling
+      } catch (err) {
+        // A 5xx from our backend means Bakong is misconfigured/unreachable — stop
+        // polling and show why. Anything else is transient, so keep polling.
+        if (err.response && err.response.status >= 500) {
+          clearInterval(timer)
+          setError(err.response.data?.message || 'Could not verify the Bakong payment.')
+        }
       }
     }, 3000)
     return () => clearInterval(timer)
@@ -80,8 +85,13 @@ export default function Checkout() {
 
       if (paymentMethod === 'Bakong') {
         // Generate a KHQR; the backend records a Pending payment and we poll for it.
-        const { data: qr } = await bakongApi.generateQr(order.orderId)
-        setBakong(qr)
+        try {
+          const { data: qr } = await bakongApi.generateQr(order.orderId)
+          setBakong(qr)
+        } catch (err) {
+          setError(err.response?.data?.message || 'Bakong payment is unavailable right now.')
+          setSubmitting(false)
+        }
         return
       }
 
@@ -117,7 +127,11 @@ export default function Checkout() {
           <p className="muted">
             Open any Bakong-supported banking app, scan this code, and confirm.
           </p>
-          <p className="muted bakong-waiting">Waiting for payment…</p>
+          {error ? (
+            <p className="error-text">{error}</p>
+          ) : (
+            <p className="muted bakong-waiting">Waiting for payment…</p>
+          )}
         </section>
       </div>
     )
