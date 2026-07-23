@@ -10,4 +10,9 @@ public interface DeliveryService {
     DeliveryDTO createDelivery(DeliveryDTO dto);
     DeliveryDTO updateDelivery(Integer id, DeliveryDTO dto);
     void deleteDelivery(Integer id);
+    // ===== NEW =====
+    DeliveryDTO completeDelivery(Integer deliveryId, String code);   // driver enters code
+    DeliveryDTO confirmDelivery(Integer deliveryId);                 // customer confirms
+    DeliveryDTO reportProblem(Integer deliveryId);                   // customer disputes
+// ===============
 }

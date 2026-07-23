@@ -5,9 +5,9 @@ import com.example.E_commerce_food_system.Entity.Orders;
 import com.example.E_commerce_food_system.Entity.Payment;
 import com.example.E_commerce_food_system.Repository.OrderRepository;
 import com.example.E_commerce_food_system.Repository.PaymentRepository;
-import com.example.E_commerce_food_system.Service.PaymentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -34,23 +34,27 @@ public class PaymentServiceImpl implements PaymentService {
         dto.setPaymentMethod(payment.getPaymentMethod());
         dto.setPaymentStatus(payment.getPaymentStatus());
         dto.setPaymentDate(payment.getPaymentDate());
+        // NEW: expose the new columns in API responses
+        dto.setAmount(payment.getAmount());
+        dto.setTransactionRef(payment.getTransactionRef());
         return dto;
     }
 
-    // Map DTO -> Entity  ← THIS IS WHERE YOUR BUG WAS
+    // Map DTO -> Entity
     private Payment toEntity(PaymentDTO dto) {
-        // ✅ Fetch the real Orders object from DB
         Orders order = orderRepository.findById(dto.getOrderId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Order not found with id: " + dto.getOrderId()));
 
         Payment payment = new Payment();
-        payment.setOrder(order);  // ✅ Set real Orders object, not null
+        payment.setOrder(order);
         payment.setPaymentMethod(dto.getPaymentMethod());
         payment.setPaymentStatus(dto.getPaymentStatus() != null
                 ? dto.getPaymentStatus()
                 : Payment.PaymentStatus.Pending);
         payment.setPaymentDate(LocalDateTime.now());
+        // NEW: amount always comes from the order, never from the client
+        payment.setAmount(order.getTotalAmount());
         return payment;
     }
 
@@ -79,8 +83,23 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional
     public PaymentDTO createPayment(PaymentDTO paymentDTO) {
+        // NEW: block paying an order twice
+        if (paymentRepository.existsByOrder_OrderIdAndPaymentStatus(
+                paymentDTO.getOrderId(), Payment.PaymentStatus.Paid)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Order " + paymentDTO.getOrderId() + " is already paid");
+        }
+
         Payment payment = toEntity(paymentDTO);
+
+        // NEW: when paid, move the order forward so the customer sees progress
+        if (payment.getPaymentStatus() == Payment.PaymentStatus.Paid) {
+            payment.getOrder().setOrderStatus(Orders.OrderStatus.Processing);
+        }
+
         return toDTO(paymentRepository.save(payment));
     }
 

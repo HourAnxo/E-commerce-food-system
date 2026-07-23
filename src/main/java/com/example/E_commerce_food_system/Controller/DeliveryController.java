@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/deliveries")
@@ -44,6 +45,26 @@ public class DeliveryController {
                                                       @RequestBody DeliveryDTO dto) {
         return ResponseEntity.ok(deliveryService.updateDelivery(id, dto));
     }
+
+    // ===== NEW: driver/admin enters the customer's 6-digit code -> Delivered =====
+    @PostMapping("/{id}/complete")
+    public ResponseEntity<DeliveryDTO> completeDelivery(@PathVariable Integer id,
+                                                        @RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(deliveryService.completeDelivery(id, body.get("code")));
+    }
+
+    // ===== NEW: customer confirms they received the product -> Completed =====
+    @PostMapping("/{id}/confirm")
+    public ResponseEntity<DeliveryDTO> confirmDelivery(@PathVariable Integer id) {
+        return ResponseEntity.ok(deliveryService.confirmDelivery(id));
+    }
+
+    // ===== NEW: customer reports a problem -> Disputed =====
+    @PostMapping("/{id}/problem")
+    public ResponseEntity<DeliveryDTO> reportProblem(@PathVariable Integer id) {
+        return ResponseEntity.ok(deliveryService.reportProblem(id));
+    }
+    // ===============
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDelivery(@PathVariable Integer id) {

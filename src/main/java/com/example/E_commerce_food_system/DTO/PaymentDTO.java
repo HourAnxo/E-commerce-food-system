@@ -1,6 +1,7 @@
 package com.example.E_commerce_food_system.DTO;
 
 import com.example.E_commerce_food_system.Entity.Payment;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class PaymentDTO {
@@ -10,6 +11,11 @@ public class PaymentDTO {
     private Payment.PaymentMethod paymentMethod;
     private Payment.PaymentStatus paymentStatus;
     private LocalDateTime paymentDate;
+
+    // ===== NEW =====
+    private BigDecimal amount;
+    private String transactionRef;
+    // ===============
 
     // Getters and Setters
     public Integer getPaymentId() { return paymentId; }
@@ -26,4 +32,12 @@ public class PaymentDTO {
 
     public LocalDateTime getPaymentDate() { return paymentDate; }
     public void setPaymentDate(LocalDateTime paymentDate) { this.paymentDate = paymentDate; }
+
+    // ===== NEW =====
+    public BigDecimal getAmount() { return amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
+
+    public String getTransactionRef() { return transactionRef; }
+    public void setTransactionRef(String transactionRef) { this.transactionRef = transactionRef; }
+    // ===============
 }

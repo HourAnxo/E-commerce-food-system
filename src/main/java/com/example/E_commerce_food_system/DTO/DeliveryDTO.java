@@ -13,6 +13,12 @@ public class DeliveryDTO {
     private DeliveryStatus deliveryStatus;
     private LocalDateTime estimatedDelivery;
 
+    // ===== NEW =====
+    private String deliveryCode;   // only filled for the customer's own request
+    private LocalDateTime deliveredAt;
+    private LocalDateTime confirmedAt;
+    // ===============
+
     // Getters and Setters
     public Integer getDeliveryId() { return deliveryId; }
     public void setDeliveryId(Integer deliveryId) { this.deliveryId = deliveryId; }
@@ -34,4 +40,15 @@ public class DeliveryDTO {
 
     public LocalDateTime getEstimatedDelivery() { return estimatedDelivery; }
     public void setEstimatedDelivery(LocalDateTime estimatedDelivery) { this.estimatedDelivery = estimatedDelivery; }
+
+    // ===== NEW =====
+    public String getDeliveryCode() { return deliveryCode; }
+    public void setDeliveryCode(String deliveryCode) { this.deliveryCode = deliveryCode; }
+
+    public LocalDateTime getDeliveredAt() { return deliveredAt; }
+    public void setDeliveredAt(LocalDateTime deliveredAt) { this.deliveredAt = deliveredAt; }
+
+    public LocalDateTime getConfirmedAt() { return confirmedAt; }
+    public void setConfirmedAt(LocalDateTime confirmedAt) { this.confirmedAt = confirmedAt; }
+    // ===============
 }
