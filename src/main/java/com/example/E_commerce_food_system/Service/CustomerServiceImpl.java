@@ -3,12 +3,11 @@ package com.example.E_commerce_food_system.Service;
 import com.example.E_commerce_food_system.DTO.CustomerDTO;
 import com.example.E_commerce_food_system.Entity.Customer;
 import com.example.E_commerce_food_system.Repository.CustomerRepository;
-import com.example.E_commerce_food_system.Service.CustomerService;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,12 +15,15 @@ import java.util.stream.Collectors;
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public CustomerServiceImpl(CustomerRepository customerRepository) {
+    public CustomerServiceImpl(CustomerRepository customerRepository,
+                               PasswordEncoder passwordEncoder) {
         this.customerRepository = customerRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    // Map Entity -> DTO
+    // Map Entity -> DTO (no password — never copy the hash out)
     private CustomerDTO toDTO(Customer customer) {
         CustomerDTO dto = new CustomerDTO();
         dto.setCustomerId(customer.getCustomerId());
@@ -40,7 +42,6 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setEmail(dto.getEmail());
         customer.setPhone(dto.getPhone());
         customer.setAddress(dto.getAddress());
-        customer.setCreatedAt(LocalDateTime.now());
         return customer;
     }
 
@@ -70,12 +71,17 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public CustomerDTO createCustomer(CustomerDTO customerDTO) {
-        // Check duplicate email
         if (customerRepository.existsByEmail(customerDTO.getEmail())) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT, "Email already exists: " + customerDTO.getEmail());
         }
+        if (customerDTO.getPassword() == null || customerDTO.getPassword().isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Password is required");
+        }
+
         Customer customer = toEntity(customerDTO);
+        customer.setPassword(passwordEncoder.encode(customerDTO.getPassword()));
         return toDTO(customerRepository.save(customer));
     }
 
@@ -85,7 +91,6 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Customer not found with id: " + id));
 
-        // Check duplicate email only if email is being changed
         if (!customer.getEmail().equals(customerDTO.getEmail()) &&
                 customerRepository.existsByEmail(customerDTO.getEmail())) {
             throw new ResponseStatusException(
@@ -96,6 +101,11 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setEmail(customerDTO.getEmail());
         customer.setPhone(customerDTO.getPhone());
         customer.setAddress(customerDTO.getAddress());
+
+        // Only re-hash if a new password was sent
+        if (customerDTO.getPassword() != null && !customerDTO.getPassword().isBlank()) {
+            customer.setPassword(passwordEncoder.encode(customerDTO.getPassword()));
+        }
 
         return toDTO(customerRepository.save(customer));
     }

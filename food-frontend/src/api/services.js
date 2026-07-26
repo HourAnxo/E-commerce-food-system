@@ -21,6 +21,8 @@ export const customerApi = {
     getAll: () => api.get('/api/customers'),
     getByEmail: (email) => api.get(`/api/customers/email/${encodeURIComponent(email)}`),
     create: (customer) => api.post('/api/customers', customer),
+    // Login with email + password (backend verifies BCrypt hash)
+    login: (email, password) => api.post('/api/customers/login', { email, password }),
 }
 
 export const orderApi = {
@@ -68,7 +70,7 @@ export const ORDER_STATUSES = ['Pending', 'Processing', 'Shipped', 'Delivery', '
 // ===== CHANGED: admin can only set Preparing/Shipped by hand.
 // Delivered requires the customer's 6-digit code (complete endpoint);
 // Completed/Disputed come from the customer's confirm/problem actions. =====
-export const DELIVERY_STATUSES = ['Preparing', 'Shipped']
+export const DELIVERY_STATUSES = ['Preparing', 'Shipped','Delivered', 'Completed']
 // ===============
 // Payment.PaymentMethod enum — "Credit Card" maps via @JsonProperty on the backend.
 export const PAYMENT_METHODS = ['Cash', 'Credit Card', 'ABA', 'ACELEDA', 'Wing', 'Bakong']

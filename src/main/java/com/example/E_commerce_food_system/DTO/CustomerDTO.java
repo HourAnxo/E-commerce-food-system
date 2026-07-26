@@ -1,5 +1,7 @@
 package com.example.E_commerce_food_system.DTO;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.LocalDateTime;
 
 public class CustomerDTO {
@@ -10,6 +12,9 @@ public class CustomerDTO {
     private String phone;
     private String address;
     private LocalDateTime createdAt;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String password;
 
     // Getters and Setters
     public Integer getCustomerId() { return customerId; }
@@ -29,4 +34,7 @@ public class CustomerDTO {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 }

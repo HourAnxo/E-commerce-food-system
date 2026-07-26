@@ -9,7 +9,7 @@ function statusLabel(status) {
 }
 
 // ===== CHANGED: added Completed; Disputed shows as a badge only =====
-const STEPS = ['Preparing', 'Shipped', 'Delivered', 'Completed']
+const STEPS = ['Preparing', 'Shipped', 'Delivered', 'Completed',]
 
 export default function DeliveryTracking() {
     const { customer } = useAuth()
@@ -140,6 +140,7 @@ export default function DeliveryTracking() {
                                                     className={`tracking-step ${idx <= currentStep ? 'done' : ''}`}
                                                 >
                                                     <span className="dot" />
+                                                    console.log("step:"+step.replace)
                                                     <span className="step-label">{step.replace(/_/g, ' ')}</span>
                                                 </div>
                                             ))}
