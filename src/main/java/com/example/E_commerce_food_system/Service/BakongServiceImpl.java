@@ -14,7 +14,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class BakongServiceImpl implements BakongService {
@@ -59,6 +58,8 @@ public class BakongServiceImpl implements BakongService {
                     p.setPaymentStatus(Payment.PaymentStatus.Pending);
                     return p;
                 });
+        payment.setAmount(order.getTotalAmount());
+        payment.setTransactionRef(md5);
         payment.setPaymentDate(LocalDateTime.now());
         paymentRepository.save(payment);
 
@@ -98,7 +99,3 @@ public class BakongServiceImpl implements BakongService {
     }
 
 }
-
-
-
-

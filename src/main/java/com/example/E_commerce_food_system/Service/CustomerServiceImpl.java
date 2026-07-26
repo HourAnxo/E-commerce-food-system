@@ -109,6 +109,18 @@ public class CustomerServiceImpl implements CustomerService {
 
         return toDTO(customerRepository.save(customer));
     }
+    @Override
+    public CustomerDTO login(String email, String password) {
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED, "Invalid email or password"));
+
+        if (password == null || !passwordEncoder.matches(password, customer.getPassword())) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "Invalid email or password");
+        }
+        return toDTO(customer);
+    }
 
     @Override
     public void deleteCustomer(Integer id) {

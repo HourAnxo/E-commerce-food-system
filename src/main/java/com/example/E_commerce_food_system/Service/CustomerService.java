@@ -15,5 +15,7 @@ public interface CustomerService {
 
     CustomerDTO updateCustomer(Integer id, CustomerDTO customerDTO);
 
+    CustomerDTO login(String email, String password);
+
     void deleteCustomer(Integer id);
 }

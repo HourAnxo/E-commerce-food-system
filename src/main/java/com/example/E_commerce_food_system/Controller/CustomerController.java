@@ -43,6 +43,13 @@ public class CustomerController {
                 .body(customerService.createCustomer(customerDTO));
     }
 
+    // POST login (email + password, verified with BCrypt)
+    @PostMapping("/login")
+    public ResponseEntity<CustomerDTO> login(@RequestBody CustomerDTO customerDTO) {
+        return ResponseEntity.ok(
+                customerService.login(customerDTO.getEmail(), customerDTO.getPassword()));
+    }
+
     // PUT update customer
     @PutMapping("/{id}")
     public ResponseEntity<CustomerDTO> updateCustomer(@PathVariable Integer id,
