@@ -1,4 +1,4 @@
-    [Unit]
+[Unit]
 Description=E-Commerce Food System backend (Spring Boot)
 After=network.target mysql.service
 
