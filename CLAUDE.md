@@ -16,19 +16,39 @@ Run from the repo root. On Windows use `mvnw.cmd`; the `./mvnw` shell script als
 
 There are no Spring profiles defined — a single `application.properties` is used for dev.
 
+The only test is the `ECommerceFoodSystemApplicationTests` context-load smoke test, so `mvnw.cmd test` mainly proves the app boots and the JPA mappings validate — it is not a behavioural safety net.
+
 ## Frontend (`food-frontend/`)
 React 19 + Vite + react-router-dom 7, axios for API calls.
 - Dev server: `npm run dev` (Vite on **http://localhost:5173**)
 - Lint: `npm run lint`  •  Build: `npm run build`
-- All requests go through `src/api/axios.js`: `baseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:8081'` — defaults to the local backend, overridden to `''` (relative `/api`) in production. `src/api/services.js` wraps the endpoints.
-- `CorsConfig.java` only allows origin `http://localhost:5173` on `/api/**` — keep the Vite port in sync with it. (CORS is irrelevant in the Dockerized/VPS deploys, where Nginx fronts both on one origin.)
+- All requests go through `src/api/axios.js`: `baseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:8081'` — defaults to the local backend, overridden to `''` (relative `/api`) in production. `src/api/services.js` wraps the endpoints, one exported `*Api` object per domain.
+- `CorsConfig.java` allows `app.cors.allowed-origins` (env `CORS_ALLOWED_ORIGINS`, comma-separated) on `/api/**`, defaulting to `http://localhost:5173` — keep the Vite port in sync with it. (CORS is irrelevant in the Dockerized/VPS deploys, where Nginx fronts both on one origin.)
 
 ## Authentication & client-side state
-There is **no real auth, security, or session layer** — no Spring Security, tokens, cookies, or password hashing. Every `/api/**` endpoint is open; access control is enforced only in the React client, so never assume the server authenticates a caller.
-- **Customer "login"** (`AuthContext.jsx`) is just `GET /api/customers/email/{email}`; the returned customer is kept in `localStorage` (`foodapp.customer`). Register = create the customer, then store it. No password is checked on the customer side.
-- **Admin login** (`AdminAuthContext.jsx`) posts to `POST /api/admins/login` (email + password compared plaintext in `AdminServiceImpl`), strips the password, and stores the admin in `localStorage` (`foodapp.admin`). The `/admin/*` routes are gated purely client-side by `RequireAdmin.jsx`.
+There is **no session, token, or filter-chain security** — only `spring-security-crypto` is on the classpath (for BCrypt); there is no Spring Security web layer. Every `/api/**` endpoint is open, and access control is enforced only in the React client, so never assume the server authenticates a caller.
+- **Customer login** — `POST /api/customers/login` with `{email, password}`; `CustomerServiceImpl` verifies against a BCrypt hash and throws `401` on mismatch. `createCustomer`/`updateCustomer` hash the incoming password (update only re-hashes when a new one is sent), and `toDTO` **never copies the hash out**. The `PasswordEncoder` bean is declared in `config/CorsConfig.java` (there is no separate security config class). `AuthContext.jsx` stores the returned customer in `localStorage` (`foodapp.customer`); its header comment claiming the backend has no password auth is stale.
+- **Admin login** posts to `POST /api/admins/login` — still **plaintext comparison** in `AdminServiceImpl`, not BCrypt. `AdminAuthContext.jsx` strips the password and stores the admin in `localStorage` (`foodapp.admin`). The `/admin/*` routes are gated purely client-side by `RequireAdmin.jsx`.
 - **The cart is entirely client-side** (`CartContext.jsx`, `localStorage` key `foodapp.cart`) — it stores product snapshots + quantity and is converted into an order only at checkout. The backend `cart`/`cart_item` tables and their controllers exist but are **not** what the UI cart uses.
 - Routing (`App.jsx`): two shells — a customer shell (`CustomerLayout` = navbar + container) and an admin shell (`AdminLayout`, no customer navbar) behind `RequireAdmin`.
+
+## Delivery lifecycle
+The largest piece of real domain logic, spread across `DeliveryServiceImpl`, the `delivery` + `delivery_decline` tables, and the admin/customer React pages. Read the whole service before touching any one transition — the states are mutually constraining and every transition validates the current state, throwing `409 CONFLICT` or `400 BAD_REQUEST` rather than silently no-oping.
+
+```
+Preparing --assign--> Assigned --accept--> Shipped --code--> Delivered --confirm--> Completed
+    ^                     |                                       |
+    +------ decline ------+                                       +--problem--> Disputed
+```
+
+- **Assign** (`POST /{id}/assign`, admin) only *offers* the job: it sets the courier, moves to `Assigned`, stamps `assigned_at`, and mints a single-use `accept_token`. Naming a courier is not the same as starting the delivery.
+- **Accept** (`POST /{id}/accept`, driver) is what actually starts it: → `Shipped`, generates the 6-digit `delivery_code`, and clears `accept_token` so the link cannot be reused.
+- **Decline** (`POST /{id}/decline`) returns the delivery to the pool (courier fields nulled, back to `Preparing`) and writes a `delivery_decline` row. `GET /{id}/declined-by` feeds the admin picker, and `assign` re-checks it — the same driver is never re-offered the same delivery.
+- **Driver access is by token, not login**: `GET /api/deliveries/token/{token}` resolves the offer for a driver opening the emailed/copied link. The frontend route for this is not wired up in `App.jsx` yet.
+- **`delivery_code`** is the 6-digit number the customer reads out to the driver; `POST /{id}/complete` requires an exact match to reach `Delivered`. It is minted at every entry into `Shipped` (accept, an update that transitions to `Shipped`, or a create that starts there) — the check in `updateDelivery` **must** stay above the `setDeliveryStatus` call that overwrites the old status.
+- **`Delivered` → `Completed`** happens either by the customer confirming (`POST /{id}/confirm`) or automatically: `autoConfirmDeliveries()` is `@Scheduled(fixedRate = 3600000)` and sweeps anything `Delivered` for more than 3 days. Scheduling is enabled by `@EnableScheduling` on `ECommerceFoodSystemApplication`.
+- **`updateDelivery` merges, it does not replace**: blank courier/phone/address fields in the admin form are ignored so editing the status dropdown cannot wipe a driver who already accepted. Keep that behaviour when adding fields.
+- `Delivery.DeliveryStatus` and the `delivery.delivery_status` DB enum must stay in sync (last changed in `V12`), the same way `Payment.PaymentMethod` must. Note `Orders.OrderStatus` (`Pending, Processing, Shipped, Delivery, Cancelled`) is a **separate, unsynchronised** enum — an order's status is not derived from its delivery's.
 
 ## Payments (Bakong KHQR)
 Cambodia's Bakong KHQR is the one integration that reaches an external service; everything else is local CRUD.
@@ -39,10 +59,11 @@ Cambodia's Bakong KHQR is the one integration that reaches an external service; 
 
 ## Database & Migrations
 - **MySQL**, schema `e_commerce_system` on `localhost:3306`. Connection comes from env vars with dev defaults baked into `application.properties`: `DB_URL` (default `jdbc:mysql://localhost:3306/e_commerce_system`), `DB_USERNAME` (default `root`), `DB_PASSWORD` (default `root`). Docker/prod override these — never hardcode creds.
-- **Flyway owns the schema.** Migrations live in `src/main/resources/db/migration/` (`V1__init.sql` … `V5__...`). JPA runs with `ddl-auto=validate`, so Hibernate will **not** create or alter tables — any schema **or seed-data** change must be a new `V{n}__description.sql` migration, or the app fails to start on validation.
+- **Flyway owns the schema.** Migrations live in `src/main/resources/db/migration/` (currently `V1__init.sql` … `V12__…`). JPA runs with `ddl-auto=validate`, so Hibernate will **not** create or alter tables — any schema **or seed-data** change must be a new `V{n}__description.sql` migration, or the app fails to start on validation. `V10` exists precisely because entity fields were added without a migration and fresh (Docker/prod) databases then failed validation.
+- Note `V12__add delivery_assignment_flow.sql` has a **space** in its filename; quote the path in shell commands.
 - **Applied migrations are immutable.** Flyway checksums every applied migration; editing an already-run `V{n}` file makes the app fail to boot with a "checksum mismatch" on the next start. Fix forward with a new migration. If you must realign a dev DB after editing one (last resort, dev only): `mvnw.cmd org.flywaydb:flyway-maven-plugin:10.20.1:repair -Dflyway.url=... -Dflyway.user=root -Dflyway.password=root` (the plugin isn't in `pom.xml`, so invoke it by full coordinates). Note `repair` only updates the stored checksum — it does **not** re-run the migration, so existing rows are unchanged.
-- Tables: admin, cart, cart_item, category, customer, delivery, orders, payment, products, review.
-- Tests use an in-memory **H2** DB (`MODE=MySQL`) with Flyway disabled and `ddl-auto=create-drop` (`src/test/resources/application.properties`).
+- Tables: admin, cart, cart_item, category, customer, delivery, delivery_decline, orders, payment, products, review.
+- Tests use an in-memory **H2** DB (`MODE=MySQL`) with Flyway disabled and `ddl-auto=create-drop` (`src/test/resources/application.properties`). Because Flyway is off under test, a migration-only change is never exercised by the test suite — verify it against a real MySQL.
 
 ## Docker & Deployment
 Two distinct deployment paths (both documented in `deploy/README.md`):
@@ -59,15 +80,16 @@ Conventions enforced across all features:
 - **Never expose entities from controllers** — controllers accept and return `DTO/` types only.
 - **DTO ⇄ Entity mapping is manual**, done by private `toDTO`/`toEntity` helpers inside each `*ServiceImpl` (no MapStruct/ModelMapper). When adding a field, update both helpers.
 - **Service interface + `ServiceImpl` pair** for every domain; controllers depend on the interface.
-- **Constructor injection only** (no `@Autowired` fields).
-- **Errors use `org.springframework.web.server.ResponseStatusException`** (e.g. `HttpStatus.NOT_FOUND`) thrown from the service layer — there is no custom exception package or `@ControllerAdvice`.
+- **Constructor injection only** (no `@Autowired` fields). `DeliveryServiceImpl` currently violates this with three `@Autowired` fields — follow the convention in new code rather than copying it.
+- **Errors use `org.springframework.web.server.ResponseStatusException`** (e.g. `HttpStatus.NOT_FOUND`) thrown from the service layer — there is no custom exception package or `@ControllerAdvice`. `server.error.include-message=always` is set so the `reason` reaches the client. A few older paths still throw bare `RuntimeException` (→ opaque 500s); convert them when you touch them.
+- Endpoints that take a single scalar (a delivery code, an assignment) accept a `Map<String, String>` body rather than a dedicated request DTO — see `DeliveryController`.
 - Entity IDs are `Integer`; path variables and service methods use `Integer`.
 - Lombok is on the classpath; mapping is still written out by hand in services.
 
 ## Layout
 - `src/main/java/com/example/E_commerce_food_system/`
-  - `config/` — e.g. `CorsConfig`
+  - `config/` — `CorsConfig` (also holds the `PasswordEncoder` bean), `BakongProperties`
   - `Controller/` `Service/` (interfaces + `*ServiceImpl` together) `Repository/` `Entity/` `DTO/`
-  - `ECommerceFoodSystemApplication.java` — entry point
+  - `ECommerceFoodSystemApplication.java` — entry point, `@EnableScheduling`
 - `src/main/resources/` — `application.properties`, `db/migration/`
 - `food-frontend/` — React app (`src/pages`, `src/components`, `src/admin`, `src/context`, `src/api`)
