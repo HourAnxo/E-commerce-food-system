@@ -882,6 +882,12 @@ main.container {
     background: rgba(255, 176, 32, 0.16);
     color: #ffce6a;
 }
+/* ===== NEW: waiting for a driver to answer the offer ===== */
+.status-assigned {
+    background: rgba(64, 124, 255, 0.18);
+    color: #88b0ff;
+}
+/* =============== */
 .status-paid {
     background: rgba(40, 200, 120, 0.16);
     color: #6ee7a8;
@@ -1062,6 +1068,29 @@ main.container {
     text-align: center;
     letter-spacing: 0.2em;
     font-weight: 700;
+}
+/* =============== */
+
+/* ===== NEW: assignment flow ===== */
+/* The driver's offer page — standalone, no navbar and no admin shell. */
+.driver-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1.5rem;
+}
+
+.assign-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.btn-sm {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
 }
 /* =============== */
 

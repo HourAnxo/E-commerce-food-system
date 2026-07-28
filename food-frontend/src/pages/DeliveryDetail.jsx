@@ -10,6 +10,13 @@ function statusLabel(status) {
     return status ? status.replace(/_/g, ' ') : '—'
 }
 
+// ===== NEW: Assigned is internal — while we are still finding a driver the
+// customer should keep seeing "Preparing" rather than an empty progress bar. =====
+function stepIndex(status) {
+    return STEPS.indexOf(status === 'Assigned' ? 'Preparing' : status)
+}
+// ===============
+
 export default function DeliveryDetail() {
     const { orderId } = useParams()
     const [delivery, setDelivery] = useState(null)
@@ -66,7 +73,7 @@ export default function DeliveryDetail() {
     }
     // ===============
 
-    const currentStep = delivery ? STEPS.indexOf(delivery.deliveryStatus) : -1
+    const currentStep = delivery ? stepIndex(delivery.deliveryStatus) : -1
 
     return (
         <div>

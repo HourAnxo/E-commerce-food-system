@@ -9,17 +9,37 @@ const EMPTY_FORM = {
   estimatedDelivery: '',
 }
 
+const EMPTY_ASSIGN = { deliveryPerson: '', deliveryPhone: '' }
+
+// Assigned and Disputed are never set by hand: Assigned has to come from the
+// assign endpoint (only that mints the driver's token) and Disputed comes from
+// the customer. Rows in those states show a badge instead of the dropdown.
+const MANUAL_STATUSES = DELIVERY_STATUSES
+
+function driverLink(delivery) {
+  return `${window.location.origin}/delivery/respond/${delivery.acceptToken}`
+}
+
 export default function AdminDeliveries() {
   const [deliveries, setDeliveries] = useState([])
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [savingId, setSavingId] = useState(null)
+  const [copiedId, setCopiedId] = useState(null)
 
   const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState(null)
+
+  // ===== NEW: assignment flow =====
+  const [assignTarget, setAssignTarget] = useState(null)
+  const [assignForm, setAssignForm] = useState(EMPTY_ASSIGN)
+  const [declined, setDeclined] = useState([])
+  const [assigning, setAssigning] = useState(false)
+  const [assignError, setAssignError] = useState(null)
+  // ===============
 
   const load = () => {
     setLoading(true)
@@ -37,6 +57,9 @@ export default function AdminDeliveries() {
 
   const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
 
+  const replaceRow = (row) =>
+    setDeliveries((prev) => prev.map((d) => (d.deliveryId === row.deliveryId ? row : d)))
+
   const handleStatusChange = async (delivery, status) => {
     setSavingId(delivery.deliveryId)
     try {
@@ -44,9 +67,7 @@ export default function AdminDeliveries() {
         ...delivery,
         deliveryStatus: status,
       })
-      setDeliveries((prev) =>
-        prev.map((d) => (d.deliveryId === delivery.deliveryId ? res.data : d)),
-      )
+      replaceRow(res.data)
     } catch {
       alert('Could not update the delivery status.')
     } finally {
@@ -65,6 +86,9 @@ export default function AdminDeliveries() {
     try {
       await deliveryApi.create({
         orderId: Number(form.orderId),
+        // Left blank on purpose in the normal flow: the delivery is created
+        // into the pool, then offered to a driver with Assign. Filling a
+        // courier here sends the offer immediately instead.
         deliveryPerson: form.deliveryPerson.trim(),
         deliveryPhone: form.deliveryPhone.trim(),
         deliveryAddress: form.deliveryAddress.trim(),
@@ -80,6 +104,64 @@ export default function AdminDeliveries() {
       setSaving(false)
     }
   }
+
+  // ===== NEW: offer the delivery to a driver =====
+  const openAssign = async (delivery) => {
+    setAssignTarget(delivery)
+    setAssignForm(EMPTY_ASSIGN)
+    setAssignError(null)
+    setDeclined([])
+    try {
+      const res = await deliveryApi.declinedBy(delivery.deliveryId)
+      setDeclined(res.data)
+    } catch {
+      // Not fatal — the backend rejects a re-offer anyway, this only warns early.
+    }
+  }
+
+  const handleAssignChange = (e) =>
+    setAssignForm((f) => ({ ...f, [e.target.name]: e.target.value }))
+
+  const handleAssign = async (e) => {
+    e.preventDefault()
+    const person = assignForm.deliveryPerson.trim()
+    if (!person) {
+      setAssignError('Please enter the driver’s name.')
+      return
+    }
+    if (declined.includes(person)) {
+      setAssignError(`${person} already declined this delivery. Choose someone else.`)
+      return
+    }
+    setAssigning(true)
+    setAssignError(null)
+    try {
+      const res = await deliveryApi.assign(
+        assignTarget.deliveryId,
+        person,
+        assignForm.deliveryPhone.trim(),
+      )
+      replaceRow(res.data)
+      setAssignTarget(null)
+    } catch (err) {
+      setAssignError(err.response?.data?.message || 'Could not assign this delivery.')
+    } finally {
+      setAssigning(false)
+    }
+  }
+
+  const copyLink = async (delivery) => {
+    const url = driverLink(delivery)
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopiedId(delivery.deliveryId)
+      setTimeout(() => setCopiedId(null), 2000)
+    } catch {
+      // Clipboard needs a secure context; fall back to showing the link.
+      window.prompt('Copy this link and send it to the driver:', url)
+    }
+  }
+  // ===============
 
   return (
     <div>
@@ -115,6 +197,7 @@ export default function AdminDeliveries() {
                 <th>Address</th>
                 <th>Est. delivery</th>
                 <th>Status</th>
+                <th>Driver</th>
               </tr>
             </thead>
             <tbody>
@@ -122,8 +205,8 @@ export default function AdminDeliveries() {
                 <tr key={d.deliveryId}>
                   <td>#{d.deliveryId}</td>
                   <td>#{d.orderId}</td>
-                  <td className="cell-strong">{d.deliveryPerson}</td>
-                  <td>{d.deliveryPhone}</td>
+                  <td className="cell-strong">{d.deliveryPerson || '—'}</td>
+                  <td>{d.deliveryPhone || '—'}</td>
                   <td>{d.deliveryAddress}</td>
                   <td>
                     {d.estimatedDelivery
@@ -131,19 +214,43 @@ export default function AdminDeliveries() {
                       : '—'}
                   </td>
                   <td>
-                    <select
-                      className={`status-select status-${d.deliveryStatus?.toLowerCase()}`}
-                      value={d.deliveryStatus}
-                      disabled={savingId === d.deliveryId}
-                      onChange={(e) => handleStatusChange(d, e.target.value)}
-                    >
-                      {DELIVERY_STATUSES.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
+                    {MANUAL_STATUSES.includes(d.deliveryStatus) ? (
+                      <select
+                        className={`status-select status-${d.deliveryStatus?.toLowerCase()}`}
+                        value={d.deliveryStatus}
+                        disabled={savingId === d.deliveryId}
+                        onChange={(e) => handleStatusChange(d, e.target.value)}
+                      >
+                        {MANUAL_STATUSES.map((s) => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className={`status status-${d.deliveryStatus?.toLowerCase()}`}>
+                        {d.deliveryStatus}
+                      </span>
+                    )}
                   </td>
+                  {/* ===== NEW: assignment flow ===== */}
+                  <td>
+                    {d.deliveryStatus === 'Preparing' ? (
+                      <button className="btn btn-secondary btn-sm" onClick={() => openAssign(d)}>
+                        Assign driver
+                      </button>
+                    ) : d.deliveryStatus === 'Assigned' ? (
+                      <div className="assign-cell">
+                        <span className="muted">Awaiting reply</span>
+                        <button className="btn btn-secondary btn-sm" onClick={() => copyLink(d)}>
+                          {copiedId === d.deliveryId ? 'Copied!' : 'Copy link'}
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="muted">—</span>
+                    )}
+                  </td>
+                  {/* =============== */}
                 </tr>
               ))}
             </tbody>
@@ -169,20 +276,18 @@ export default function AdminDeliveries() {
               </label>
 
               <label>
-                Delivery person
+                Delivery person <span className="muted">(optional)</span>
                 <input
                   name="deliveryPerson"
-                  required
                   value={form.deliveryPerson}
                   onChange={handleChange}
                 />
               </label>
 
               <label>
-                Phone
+                Phone <span className="muted">(optional)</span>
                 <input
                   name="deliveryPhone"
-                  required
                   value={form.deliveryPhone}
                   onChange={handleChange}
                 />
@@ -208,6 +313,11 @@ export default function AdminDeliveries() {
                 />
               </label>
 
+              <p className="muted form-full">
+                Leave the courier blank to put this delivery in the pool and assign it later.
+                Naming one now sends them an offer straight away.
+              </p>
+
               {formError && <p className="error-text form-full">{formError}</p>}
 
               <div className="modal-actions form-full">
@@ -226,6 +336,61 @@ export default function AdminDeliveries() {
           </div>
         </div>
       )}
+
+      {/* ===== NEW: assign modal ===== */}
+      {assignTarget && (
+        <div className="modal-overlay" onClick={() => setAssignTarget(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Assign delivery #{assignTarget.deliveryId}</h2>
+            <p className="muted">
+              This sends the driver an offer. The delivery only starts once they accept.
+            </p>
+
+            {declined.length > 0 && (
+              <p className="error-text">
+                Already declined by: {declined.join(', ')}
+              </p>
+            )}
+
+            <form onSubmit={handleAssign} className="form-grid">
+              <label className="form-full">
+                Driver name
+                <input
+                  name="deliveryPerson"
+                  required
+                  value={assignForm.deliveryPerson}
+                  onChange={handleAssignChange}
+                />
+              </label>
+
+              <label className="form-full">
+                Phone
+                <input
+                  name="deliveryPhone"
+                  value={assignForm.deliveryPhone}
+                  onChange={handleAssignChange}
+                />
+              </label>
+
+              {assignError && <p className="error-text form-full">{assignError}</p>}
+
+              <div className="modal-actions form-full">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setAssignTarget(null)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={assigning}>
+                  {assigning ? 'Sending…' : 'Send offer'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* =============== */}
     </div>
   )
 }

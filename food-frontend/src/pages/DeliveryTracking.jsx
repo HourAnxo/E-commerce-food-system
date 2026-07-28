@@ -11,6 +11,13 @@ function statusLabel(status) {
 // ===== CHANGED: added Completed; Disputed shows as a badge only =====
 const STEPS = ['Preparing', 'Shipped', 'Delivered', 'Completed',]
 
+// ===== NEW: Assigned is internal — while we are still finding a driver the
+// customer should keep seeing "Preparing" rather than an empty progress bar. =====
+function stepIndex(status) {
+    return STEPS.indexOf(status === 'Assigned' ? 'Preparing' : status)
+}
+// ===============
+
 export default function DeliveryTracking() {
     const { customer } = useAuth()
     const location = useLocation()
@@ -118,7 +125,7 @@ export default function DeliveryTracking() {
                     {orders.map((order) => {
                         const delivery = deliveriesByOrder[order.orderId]
                         const currentStep = delivery
-                            ? STEPS.indexOf(delivery.deliveryStatus)
+                            ? stepIndex(delivery.deliveryStatus)
                             : -1
                         return (
                             <div key={order.orderId} id={`order-${order.orderId}`} className="tracking-card">

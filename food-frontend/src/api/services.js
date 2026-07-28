@@ -35,6 +35,7 @@ export const orderApi = {
 
 export const deliveryApi = {
     getAll: () => api.get('/api/deliveries'),
+    getById: (id) => api.get(`/api/deliveries/${id}`),
     getByOrder: (orderId) => api.get(`/api/deliveries/order/${orderId}`),
     create: (delivery) => api.post('/api/deliveries', delivery),
     update: (id, delivery) => api.put(`/api/deliveries/${id}`, delivery),
@@ -45,6 +46,19 @@ export const deliveryApi = {
     confirm: (deliveryId) => api.post(`/api/deliveries/${deliveryId}/confirm`),
     // Customer reports a problem -> Disputed
     reportProblem: (deliveryId) => api.post(`/api/deliveries/${deliveryId}/problem`),
+    // ===============
+    // ===== NEW: assignment flow =====
+    // Admin OFFERS the job to a driver -> Assigned. Does not start the delivery.
+    assign: (deliveryId, deliveryPerson, deliveryPhone) =>
+        api.post(`/api/deliveries/${deliveryId}/assign`, { deliveryPerson, deliveryPhone }),
+    // Driver takes the job -> Shipped (this is what actually starts it)
+    accept: (deliveryId) => api.post(`/api/deliveries/${deliveryId}/accept`),
+    // Driver is busy -> back to Preparing, and they are never re-offered this job
+    decline: (deliveryId) => api.post(`/api/deliveries/${deliveryId}/decline`),
+    // Names the admin picker must not offer this delivery to again
+    declinedBy: (deliveryId) => api.get(`/api/deliveries/${deliveryId}/declined-by`),
+    // Driver opens their offer link — resolves the delivery without logging in
+    getByToken: (token) => api.get(`/api/deliveries/token/${encodeURIComponent(token)}`),
     // ===============
 }
 
@@ -69,8 +83,19 @@ export const bakongApi = {
 export const ORDER_STATUSES = ['Pending', 'Processing', 'Shipped', 'Delivery', 'Cancelled']
 // ===== CHANGED: admin can only set Preparing/Shipped by hand.
 // Delivered requires the customer's 6-digit code (complete endpoint);
-// Completed/Disputed come from the customer's confirm/problem actions. =====
+// Completed/Disputed come from the customer's confirm/problem actions;
+// Assigned is only ever reached through the assign endpoint. =====
 export const DELIVERY_STATUSES = ['Preparing', 'Shipped','Delivered', 'Completed']
+// Every value in Delivery.DeliveryStatus, in lifecycle order. Used for display
+// only — a row sitting in Assigned or Disputed still has to render correctly.
+export const DELIVERY_STATUS_ALL = [
+    'Preparing',
+    'Assigned',
+    'Shipped',
+    'Delivered',
+    'Completed',
+    'Disputed',
+]
 // ===============
 // Payment.PaymentMethod enum — "Credit Card" maps via @JsonProperty on the backend.
 export const PAYMENT_METHODS = ['Cash', 'Credit Card', 'ABA', 'ACELEDA', 'Wing', 'Bakong']

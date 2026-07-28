@@ -8,6 +8,7 @@ import Checkout from './pages/Checkout.jsx'
 import OrderHistory from './pages/OrderHistory.jsx'
 import DeliveryTracking from './pages/DeliveryTracking.jsx'
 import DeliveryDetail from './pages/DeliveryDetail.jsx'
+import DeliveryRespond from './pages/DeliveryRespond.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import RequireAdmin from './admin/RequireAdmin.jsx'
@@ -35,6 +36,9 @@ function CustomerLayout() {
 function App() {
   return (
     <Routes>
+      {/* Driver's offer link — no navbar and no login; the token is the identity */}
+      <Route path="/delivery/respond/:token" element={<DeliveryRespond />} />
+
       {/* Admin section — own full-screen layout, no customer navbar */}
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route
