@@ -11,10 +11,12 @@ import java.util.Optional;
 @Repository
 public interface DeliveryRepository extends JpaRepository<Delivery, Integer> {
 
-    // CHANGED: List -> Optional (one delivery per order)
     Optional<Delivery> findByOrder_OrderId(Integer orderId);
 
-    // NEW: for the auto-confirm scheduled job
     List<Delivery> findByDeliveryStatusAndDeliveredAtBefore(
             Delivery.DeliveryStatus status, LocalDateTime before);
+
+    // ===== NEW: driver opens the offer link instead of logging in =====
+    Optional<Delivery> findByAcceptToken(String acceptToken);
+    // ===============
 }

@@ -13,10 +13,13 @@ public class DeliveryDTO {
     private DeliveryStatus deliveryStatus;
     private LocalDateTime estimatedDelivery;
 
-    // ===== NEW =====
     private String deliveryCode;   // only filled for the customer's own request
     private LocalDateTime deliveredAt;
     private LocalDateTime confirmedAt;
+
+    // ===== NEW: assignment flow =====
+    private LocalDateTime assignedAt;
+    private String acceptToken;    // admin copies this into the driver's link
     // ===============
 
     // Getters and Setters
@@ -41,7 +44,6 @@ public class DeliveryDTO {
     public LocalDateTime getEstimatedDelivery() { return estimatedDelivery; }
     public void setEstimatedDelivery(LocalDateTime estimatedDelivery) { this.estimatedDelivery = estimatedDelivery; }
 
-    // ===== NEW =====
     public String getDeliveryCode() { return deliveryCode; }
     public void setDeliveryCode(String deliveryCode) { this.deliveryCode = deliveryCode; }
 
@@ -50,5 +52,12 @@ public class DeliveryDTO {
 
     public LocalDateTime getConfirmedAt() { return confirmedAt; }
     public void setConfirmedAt(LocalDateTime confirmedAt) { this.confirmedAt = confirmedAt; }
+
+    // ===== NEW =====
+    public LocalDateTime getAssignedAt() { return assignedAt; }
+    public void setAssignedAt(LocalDateTime assignedAt) { this.assignedAt = assignedAt; }
+
+    public String getAcceptToken() { return acceptToken; }
+    public void setAcceptToken(String acceptToken) { this.acceptToken = acceptToken; }
     // ===============
 }

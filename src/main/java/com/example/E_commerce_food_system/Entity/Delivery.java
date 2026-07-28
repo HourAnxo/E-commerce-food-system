@@ -16,11 +16,13 @@ public class Delivery {
     @JoinColumn(name = "order_id", nullable = false)
     private Orders order;
 
-    @Column(name = "delivery_person", nullable = false)
+    // ===== CHANGED: a delivery sitting in the pool has no driver yet (V12) =====
+    @Column(name = "delivery_person")
     private String deliveryPerson;
 
-    @Column(name = "delivery_phone", nullable = false)
+    @Column(name = "delivery_phone")
     private String deliveryPhone;
+    // ===============
 
     @Column(name = "delivery_address", nullable = false, columnDefinition = "text")
     private String deliveryAddress;
@@ -31,7 +33,7 @@ public class Delivery {
     // ===============
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "delivery_status")
+    @Column(name = "delivery_status", nullable = false)
     private DeliveryStatus deliveryStatus = DeliveryStatus.Preparing;
 
     @Column(name = "estimated_delivery")
@@ -45,8 +47,20 @@ public class Delivery {
     private LocalDateTime confirmedAt;
     // ===============
 
+    // ===== NEW: assignment flow =====
+    @Column(name = "assigned_at")
+    private LocalDateTime assignedAt;
+
+    /** Single-use token for the driver's offer link. Cleared on accept/decline. */
+    @Column(name = "accept_token", length = 64, unique = true)
+    private String acceptToken;
+    // ===============
+
     public enum DeliveryStatus {
         Preparing,
+        // ===== NEW =====
+        Assigned,
+        // ===============
         Shipped,
         Delivered,
         // ===== NEW =====
@@ -88,5 +102,13 @@ public class Delivery {
 
     public LocalDateTime getConfirmedAt() { return confirmedAt; }
     public void setConfirmedAt(LocalDateTime confirmedAt) { this.confirmedAt = confirmedAt; }
+    // ===============
+
+    // ===== NEW: assignment flow =====
+    public LocalDateTime getAssignedAt() { return assignedAt; }
+    public void setAssignedAt(LocalDateTime assignedAt) { this.assignedAt = assignedAt; }
+
+    public String getAcceptToken() { return acceptToken; }
+    public void setAcceptToken(String acceptToken) { this.acceptToken = acceptToken; }
     // ===============
 }

@@ -46,25 +46,61 @@ public class DeliveryController {
         return ResponseEntity.ok(deliveryService.updateDelivery(id, dto));
     }
 
-    // ===== NEW: driver/admin enters the customer's 6-digit code -> Delivered =====
+    // ===== driver/admin enters the customer's 6-digit code -> Delivered =====
     @PostMapping("/{id}/complete")
     public ResponseEntity<DeliveryDTO> completeDelivery(@PathVariable Integer id,
                                                         @RequestBody Map<String, String> body) {
         return ResponseEntity.ok(deliveryService.completeDelivery(id, body.get("code")));
     }
 
-    // ===== NEW: customer confirms they received the product -> Completed =====
+    // ===== customer confirms they received the product -> Completed =====
     @PostMapping("/{id}/confirm")
     public ResponseEntity<DeliveryDTO> confirmDelivery(@PathVariable Integer id) {
         return ResponseEntity.ok(deliveryService.confirmDelivery(id));
     }
 
-    // ===== NEW: customer reports a problem -> Disputed =====
+    // ===== customer reports a problem -> Disputed =====
     @PostMapping("/{id}/problem")
     public ResponseEntity<DeliveryDTO> reportProblem(@PathVariable Integer id) {
         return ResponseEntity.ok(deliveryService.reportProblem(id));
     }
-    // ===============
+
+    // ================================================================
+    // NEW: assignment flow
+    // ================================================================
+
+    /** Admin offers the delivery to a driver. Does not start the delivery. */
+    @PostMapping("/{id}/assign")
+    public ResponseEntity<DeliveryDTO> assign(@PathVariable Integer id,
+                                              @RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(deliveryService.assign(
+                id, body.get("deliveryPerson"), body.get("deliveryPhone")));
+    }
+
+    /** Driver takes the job -> Shipped. */
+    @PostMapping("/{id}/accept")
+    public ResponseEntity<DeliveryDTO> accept(@PathVariable Integer id) {
+        return ResponseEntity.ok(deliveryService.accept(id));
+    }
+
+    /** Driver is busy -> back to Preparing, decline recorded. */
+    @PostMapping("/{id}/decline")
+    public ResponseEntity<DeliveryDTO> decline(@PathVariable Integer id) {
+        return ResponseEntity.ok(deliveryService.decline(id));
+    }
+
+    /** Admin picker uses this to avoid re-offering to someone who said no. */
+    @GetMapping("/{id}/declined-by")
+    public ResponseEntity<List<String>> declinedBy(@PathVariable Integer id) {
+        return ResponseEntity.ok(deliveryService.declinedBy(id));
+    }
+
+    /** Driver opens /delivery/respond/{token} in the browser. No login needed. */
+    @GetMapping("/token/{token}")
+    public ResponseEntity<DeliveryDTO> byToken(@PathVariable String token) {
+        return ResponseEntity.ok(deliveryService.getByAcceptToken(token));
+    }
+    // ================================================================
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDelivery(@PathVariable Integer id) {
