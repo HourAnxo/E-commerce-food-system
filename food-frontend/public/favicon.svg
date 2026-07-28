@@ -1,18 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" role="img" aria-label="Food">
-  <defs>
-    <linearGradient id="foodGrad" x1="6" y1="4" x2="42" y2="44" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ff7a1a"/>
-      <stop offset="1" stop-color="#ff8f3d"/>
-    </linearGradient>
-  </defs>
-  <rect x="2" y="2" width="44" height="44" rx="11" fill="url(#foodGrad)"/>
-  <!-- steam -->
-  <g stroke="#fff" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.9">
-    <path d="M19 20c-2.4-2.6-2.4-4.4 0-7 2.4-2.6 2.4-4.4 0-7"/>
-    <path d="M29 20c-2.4-2.6-2.4-4.4 0-7 2.4-2.6 2.4-4.4 0-7"/>
-  </g>
-  <!-- bowl -->
-  <path d="M11 25.5h26a13 13 0 0 1-26 0Z" fill="#fff"/>
-  <ellipse cx="24" cy="25.5" rx="13.6" ry="3.2" fill="#fff"/>
-  <ellipse cx="24" cy="25.5" rx="10.4" ry="2" fill="url(#foodGrad)" opacity="0.85"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+    <!-- top bun -->
+    <path d="M10 28c0-10 10-18 22-18s22 8 22 18z" fill="#F4A83B"/>
+    <!-- sesame seeds -->
+    <ellipse cx="24" cy="16" rx="2" ry="1.2" fill="#FFF3D6"/>
+    <ellipse cx="32" cy="13" rx="2" ry="1.2" fill="#FFF3D6"/>
+    <ellipse cx="40" cy="16" rx="2" ry="1.2" fill="#FFF3D6"/>
+    <!-- lettuce -->
+    <path d="M9 30h46c0 3-3 5-6 4-3 2-6 2-9-0.5-3 2.5-7 2.5-10 0-3 2.5-7 2.5-10 0-3 2.5-6 2.5-9 0.5-3 1-6-1-2-4z" fill="#7CB342"/>
+    <!-- patty -->
+    <rect x="9" y="35" width="46" height="7" rx="3.5" fill="#7B4B2A"/>
+    <!-- cheese -->
+    <path d="M9 43l46-1-4 7H13z" fill="#FFC93C"/>
+    <!-- bottom bun -->
+    <path d="M11 49h42c0 4-4 7-9 7H20c-5 0-9-3-9-7z" fill="#E8912A"/>
 </svg>
