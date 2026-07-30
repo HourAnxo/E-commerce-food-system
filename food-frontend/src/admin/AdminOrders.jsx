@@ -57,8 +57,10 @@ export default function AdminOrders() {
       setOrders((prev) =>
         prev.map((o) => (o.orderId === order.orderId ? res.data : o)),
       )
-    } catch {
-      alert('Could not update the order status.')
+    } catch (err) {
+      // Re-activating a cancelled order takes its stock again, which 409s if the
+      // stock has since sold out — show which product rather than a generic failure.
+      alert(err.response?.data?.message || 'Could not update the order status.')
     } finally {
       setSavingId(null)
     }

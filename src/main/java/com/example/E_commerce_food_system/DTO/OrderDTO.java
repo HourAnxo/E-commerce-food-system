@@ -3,6 +3,7 @@ package com.example.E_commerce_food_system.DTO;
 import com.example.E_commerce_food_system.Entity.Orders.OrderStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class OrderDTO {
 
@@ -11,6 +12,8 @@ public class OrderDTO {
     private LocalDateTime orderDate;
     private BigDecimal totalAmount;
     private OrderStatus orderStatus;
+    /** What was bought. Optional on create — an order without items deducts no stock. */
+    private List<OrderItemDTO> items;
 
     // Getters and Setters
     public Integer getOrderId() { return orderId; }
@@ -27,4 +30,7 @@ public class OrderDTO {
 
     public OrderStatus getOrderStatus() { return orderStatus; }
     public void setOrderStatus(OrderStatus orderStatus) { this.orderStatus = orderStatus; }
+
+    public List<OrderItemDTO> getItems() { return items; }
+    public void setItems(List<OrderItemDTO> items) { this.items = items; }
 }

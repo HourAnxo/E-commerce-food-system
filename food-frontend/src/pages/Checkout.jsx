@@ -111,12 +111,18 @@ export default function Checkout() {
         setSubmitting(true)
         setError(null)
         try {
-            // Every method starts by creating the order.
+            // Every method starts by creating the order. The line items are what let
+            // the backend deduct stock — the price is re-read server-side, so only the
+            // product and quantity are sent.
             const { data: order } = await orderApi.create({
                 customerId: customer.customerId,
                 orderDate: new Date().toISOString(),
                 totalAmount: Number(totalPrice.toFixed(2)),
                 orderStatus: 'Pending',
+                items: items.map((i) => ({
+                    productId: i.productId,
+                    quantity: i.quantity,
+                })),
             })
 
             if (paymentMethod === 'Bakong') {
@@ -151,8 +157,10 @@ export default function Checkout() {
             })
             clearCart()
             navigate('/orders', { state: { justOrdered: true } })
-        } catch {
-            setError('Failed to place order. Please try again.')
+        } catch (err) {
+            // A 409 means an item ran out of stock — show which one rather than a
+            // generic failure the customer cannot act on.
+            setError(err.response?.data?.message || 'Failed to place order. Please try again.')
             setSubmitting(false)
         }
     }
