@@ -1,0 +1,11 @@
+# Template for local developer secrets.
+# Copy to application-local.properties (gitignored) and fill in real values.
+# application.properties imports it with "optional:", so it is picked up
+# automatically on startup — no profile flag, no env vars needed.
+
+# Telegram bot token from @BotFather. Leave empty to disable the bot.
+telegram.bot.token=
+
+# Bakong KHQR — get these from https://api-bakong.nbc.gov.kh
+#bakong.account-id=
+#bakong.api-token=
