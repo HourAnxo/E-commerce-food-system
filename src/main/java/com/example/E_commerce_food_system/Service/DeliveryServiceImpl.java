@@ -8,6 +8,7 @@ import com.example.E_commerce_food_system.Repository.DeliveryDeclineRepository;
 import com.example.E_commerce_food_system.Repository.DeliveryRepository;
 import com.example.E_commerce_food_system.Repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,16 @@ public class DeliveryServiceImpl implements DeliveryService {
     @Autowired
     private DeliveryDeclineRepository declineRepository;
     // ===============
+
+    /**
+     * Constructor-injected, unlike the @Autowired fields above — those predate the
+     * project's constructor-injection convention; new dependencies follow it.
+     */
+    private final ApplicationEventPublisher events;
+
+    public DeliveryServiceImpl(ApplicationEventPublisher events) {
+        this.events = events;
+    }
 
     @Override
     public List<DeliveryDTO> getAllDeliveries() {
@@ -231,7 +242,17 @@ public class DeliveryServiceImpl implements DeliveryService {
         delivery.setDeliveryCode(generateCode());
         delivery.setAcceptToken(null); // the link is single use
 
-        return toDTO(deliveryRepository.save(delivery));
+        Delivery saved = deliveryRepository.save(delivery);
+
+        // Listeners fire after this transaction commits, so nobody is told the
+        // delivery started if the save is rolled back.
+        events.publishEvent(new DeliveryAcceptedEvent(
+                saved.getOrder().getCustomer().getCustomerId(),
+                saved.getOrder().getOrderId(),
+                saved.getDeliveryPerson(),
+                saved.getDeliveryCode()));
+
+        return toDTO(saved);
     }
 
     /** Driver is busy. Back to the pool, and this driver is remembered. */

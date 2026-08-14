@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
@@ -41,6 +42,24 @@ public class TelegramSender {
                 .text(text)
                 .parseMode("Markdown")
                 .build());
+    }
+
+    /**
+     * Best effort. Telegram refuses this for messages older than 48h, and in groups
+     * the bot needs delete rights -- neither is worth surfacing to the user.
+     */
+    public void deleteMessage(Long chatId, Integer messageId) {
+        if (messageId == null) {
+            return;
+        }
+        try {
+            client.execute(DeleteMessage.builder()
+                    .chatId(chatId)
+                    .messageId(messageId)
+                    .build());
+        } catch (TelegramApiException e) {
+            log.warn("Could not delete message {} in chat {}: {}", messageId, chatId, e.getMessage());
+        }
     }
 
     private void execute(SendMessage message) {
