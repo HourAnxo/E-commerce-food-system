@@ -33,6 +33,15 @@ public class Customer {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    /**
+     * Telegram chat this account is linked to, or null if the customer never used
+     * the bot. Deliberately absent from CustomerDTO — like the password hash, it is
+     * internal and never crosses the controller boundary.
+     */
+    @Column(name = "telegram_chat_id", unique = true)
+    @JsonIgnore
+    private Long telegramChatId;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -71,4 +80,7 @@ public class Customer {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Long getTelegramChatId() { return telegramChatId; }
+    public void setTelegramChatId(Long telegramChatId) { this.telegramChatId = telegramChatId; }
 }

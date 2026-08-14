@@ -89,7 +89,8 @@ public class    FoodOrderBot implements SpringLongPollingBot, LongPollingSingleT
                 sender.send(chatId, "I don't know that command. Send /help to see what I can do.");
                 return;
             }
-            handler.handle(new CommandContext(chatId, telegramUserId, firstName, args));
+            handler.handle(new CommandContext(chatId, telegramUserId, firstName, args,
+                    update.getMessage().getMessageId()));
         } catch (Exception e) {
             // Never let an exception kill the polling thread.
             log.error("Failed to handle '{}' for chat {}", command, chatId, e);
