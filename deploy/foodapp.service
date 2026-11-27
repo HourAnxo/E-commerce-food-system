@@ -10,6 +10,9 @@ WorkingDirectory=/opt/foodapp
 Environment=DB_URL=jdbc:mysql://localhost:3306/e_commerce_system
 Environment=DB_USERNAME=foodapp
 Environment=DB_PASSWORD=CHANGE_ME_STRONG_PW
+# Bakong KHQR — real receiving account (name@bank) + token from https://api-bakong.nbc.gov.kh
+Environment=BAKONG_ACCOUNT_ID=
+Environment=BAKONG_API_TOKEN=
 ExecStart=/usr/bin/java -jar /opt/foodapp/app.jar
 # Spring Boot exits with 143 on SIGTERM; treat it as a clean stop.
 SuccessExitStatus=143

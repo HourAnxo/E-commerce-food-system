@@ -26,6 +26,10 @@ services:
       DB_URL: jdbc:mysql://db:3306/e_commerce_system
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
+      BAKONG_ACCOUNT_ID: ${BAKONG_ACCOUNT_ID:-}
+      BAKONG_API_TOKEN: ${BAKONG_API_TOKEN:-}
+      BAKONG_MERCHANT_NAME: ${BAKONG_MERCHANT_NAME:-Food System}
+      BAKONG_MERCHANT_CITY: ${BAKONG_MERCHANT_CITY:-Phnom Penh}
     depends_on:
       db:
         condition: service_healthy
