@@ -97,5 +97,6 @@ export const DELIVERY_STATUS_ALL = [
     'Disputed',
 ]
 // ===============
-// Payment.PaymentMethod enum — "Credit Card" maps via @JsonProperty on the backend.
-export const PAYMENT_METHODS = ['Cash', 'Credit Card', 'ABA', 'ACELEDA', 'Wing', 'Bakong']
+// Checkout only offers Bakong KHQR. The backend Payment.PaymentMethod enum still has the
+// older values so historical payment rows keep loading.
+export const PAYMENT_METHODS = ['Bakong']

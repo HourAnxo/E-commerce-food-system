@@ -94,7 +94,7 @@ Conventions enforced across all features:
 - **Never expose entities from controllers** — controllers accept and return `DTO/` types only.
 - **DTO ⇄ Entity mapping is manual**, done by private `toDTO`/`toEntity` helpers inside each `*ServiceImpl` (no MapStruct/ModelMapper). When adding a field, update both helpers.
 - **Service interface + `ServiceImpl` pair** for every domain; controllers depend on the interface.
-- **Constructor injection only** (no `@Autowired` fields). `DeliveryServiceImpl` currently violates this with three `@Autowired` fields — follow the convention in new code rather than copying it.
+- **Constructor injection only** (no `@Autowired` fields). `DeliveryServiceImpl` and `ReviewServiceImpl` currently violate this with `@Autowired` fields — follow the convention in new code rather than copying them.
 - **Errors use `org.springframework.web.server.ResponseStatusException`** (e.g. `HttpStatus.NOT_FOUND`) thrown from the service layer — there is no custom exception package or `@ControllerAdvice`. `server.error.include-message=always` is set so the `reason` reaches the client. A few older paths still throw bare `RuntimeException` (→ opaque 500s); convert them when you touch them.
 - Endpoints that take a single scalar (a delivery code, an assignment) accept a `Map<String, String>` body rather than a dedicated request DTO — see `DeliveryController`.
 - Entity IDs are `Integer`; path variables and service methods use `Integer`.
@@ -108,3 +108,4 @@ Conventions enforced across all features:
   - `ECommerceFoodSystemApplication.java` — entry point, `@EnableScheduling`
 - `src/main/resources/` — `application.properties`, `db/migration/`
 - `food-frontend/` — React app (`src/pages`, `src/components`, `src/admin`, `src/context`, `src/api`)
+- `SuperClaude_Framework/` — an unrelated third-party repo committed by accident as a bare gitlink (no `.gitmodules`). It is not part of the app; ignore it when searching, and don't follow its own `CLAUDE.md`/`AGENTS.md`.
