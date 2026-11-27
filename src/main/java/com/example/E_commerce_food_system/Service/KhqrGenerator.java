@@ -15,6 +15,9 @@ import java.security.NoSuchAlgorithmException;
 @Component
 public class KhqrGenerator {
 
+    /** How long a generated QR stays payable. Checkout re-issues a fresh one on retry. */
+    private static final long QR_LIFETIME_MS = 15 * 60 * 1000L;
+
     /**
      * @param accountId    Bakong account identifier (name@bank) that receives payment
      * @param merchantName name shown to the payer (<= 25 chars)
@@ -43,6 +46,11 @@ public class KhqrGenerator {
         sb.append(tlv("59", clip(merchantName, 25)));     // Merchant name
         sb.append(tlv("60", clip(merchantCity, 15)));     // Merchant city
         sb.append(tlv("62", tlv("01", clip(billNumber, 25)))); // Additional data -> bill number
+        // Timestamps (ms since epoch): creation + expiration, as the official KHQR SDK emits
+        // for dynamic QRs. Bank apps refuse to pay a dynamic KHQR once it has expired.
+        long now = System.currentTimeMillis();
+        sb.append(tlv("99", tlv("00", String.valueOf(now))
+                + tlv("01", String.valueOf(now + QR_LIFETIME_MS))));
 
         // CRC is computed over everything including the CRC tag id + length ("6304").
         String withoutCrc = sb.append("6304").toString();
